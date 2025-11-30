@@ -1,0 +1,6 @@
+2025-11-29 11:50:49,631 [INFO] Server starting on 0.0.0.0:5500
+2025-11-29 11:50:58,737 [INFO] Server starting on 0.0.0.0:5500
+2025-11-29 11:53:31,762 [INFO] Server starting on 0.0.0.0:5500
+2025-11-29 11:53:44,072 [INFO] Player 1 connected from ('127.0.0.1', 59242)
+2025-11-29 11:53:53,956 [INFO] Player 2 connected from ('127.0.0.1', 59246)
+2025-11-29 11:53:53,956 [INFO] Starting game between Alice and Bob
