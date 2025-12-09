@@ -1,13 +1,13 @@
-# gui_client.py
 import socket
 import threading
 import queue
 import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
 
-# ---------- 网络工具函数 ----------
+# ---------- Network Utility Functions ----------
 
 def send_line(sock, text):
+    """Send a UTF-8 encoded line (ending with newline) to the server."""
     try:
         print(f"[DEBUG] send_line -> {text}")
         sock.sendall((text + "\n").encode("utf-8"))
@@ -15,6 +15,7 @@ def send_line(sock, text):
         print(f"[ERROR] send_line failed: {e}")
 
 def recv_line(sock):
+    """Receive a newline-terminated UTF-8 string from the server, one byte at a time."""
     data = []
     try:
         while True:
@@ -29,7 +30,7 @@ def recv_line(sock):
         return None
     return "".join(data)
 
-# ---------- GUI 客户端 ----------
+# ---------- GUI Client ----------
 
 class TicTacToeGUI:
     def __init__(self, root, sock, username):
@@ -40,23 +41,23 @@ class TicTacToeGUI:
         self.root.title(f"Tic-Tac-Toe - {username}")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # 用来从网络线程传消息到主线程
+        # Queue used to pass messages from the network thread to the GUI thread
         self.msg_queue = queue.Queue()
 
-        # 当前棋盘状态
+        # Game state
         self.board_state = ["-"] * 9
         self.my_mark = "?"
         self.opponent = "?"
         self.current_turn = "?"
 
-        # ---------- UI 布局 ----------
+        # ---------- UI Layout ----------
         top_frame = tk.Frame(root)
         top_frame.pack(pady=5, fill="x")
 
         self.info_label = tk.Label(top_frame, text="Connecting...", anchor="w")
         self.info_label.pack(fill="x")
 
-        # 棋盘 3x3
+        # 3x3 board
         board_frame = tk.Frame(root)
         board_frame.pack(pady=5)
 
@@ -74,7 +75,7 @@ class TicTacToeGUI:
                 btn.grid(row=r, column=c, padx=2, pady=2)
                 self.buttons.append(btn)
 
-        # 聊天窗口
+        # Chat window
         chat_frame = tk.Frame(root)
         chat_frame.pack(pady=5, fill="both", expand=True)
 
@@ -83,7 +84,7 @@ class TicTacToeGUI:
         )
         self.chat_box.pack(fill="both", expand=True)
 
-        # 输入框 + 按钮
+        # Input box + send button
         input_frame = tk.Frame(root)
         input_frame.pack(pady=5, fill="x")
 
@@ -94,25 +95,29 @@ class TicTacToeGUI:
         send_btn = tk.Button(input_frame, text="Send", command=self.on_send_chat)
         send_btn.pack(side="right")
 
-        # 状态栏
+        # Status bar
         self.status_label = tk.Label(root, text="Waiting...", anchor="w")
         self.status_label.pack(fill="x")
 
-        # 启动一个定时器轮询消息队列
+        # Periodically poll the message queue
         self.root.after(100, self.process_queue)
 
-    # ---------- UI 事件 ----------
+    # ---------- UI Event Handlers ----------
 
     def on_cell_click(self, r, c):
+        """Handle clicks on board cells."""
         idx = r * 3 + c
         print(f"[DEBUG] cell clicked r={r}, c={c}, idx={idx}, val={self.board_state[idx]}")
-        # 如果格子不是空的，就不要再点
+
+        # Ignore if the cell is not empty
         if self.board_state[idx] != "-":
             return
-        # 直接发 MOVE 交给服务器检查是否轮到我
+
+        # Send MOVE request; server will validate turn ownership
         send_line(self.sock, f"MOVE {r} {c}")
 
     def on_send_chat(self, event=None):
+        """Send chat text to the server."""
         text = self.chat_entry.get().strip()
         if not text:
             return
@@ -120,6 +125,7 @@ class TicTacToeGUI:
         self.chat_entry.delete(0, tk.END)
 
     def on_close(self):
+        """Gracefully close the connection and exit."""
         try:
             send_line(self.sock, "QUIT")
             self.sock.close()
@@ -127,15 +133,17 @@ class TicTacToeGUI:
             pass
         self.root.destroy()
 
-    # ---------- UI 更新工具 ----------
+    # ---------- UI Update Utilities ----------
 
     def append_chat(self, line):
+        """Append a line to the chat box."""
         self.chat_box.config(state="normal")
         self.chat_box.insert(tk.END, line + "\n")
         self.chat_box.see(tk.END)
         self.chat_box.config(state="disabled")
 
     def update_board(self, board_string):
+        """Update board buttons based on a 9-character board string."""
         print(f"[DEBUG] update_board -> {board_string}")
         if len(board_string) != 9:
             return
@@ -144,23 +152,29 @@ class TicTacToeGUI:
             text = ch if ch != "-" else " "
             self.buttons[i].config(text=text)
 
-    # ---------- 从网络线程来的消息处理 ----------
+    # ---------- Incoming Message Processing (from network thread) ----------
 
     def process_queue(self):
+        """Process queued server messages in the GUI thread."""
         try:
             while not self.msg_queue.empty():
                 cmd, rest = self.msg_queue.get()
                 print(f"[DEBUG] process_queue cmd={cmd}, rest={rest}")
+
                 if cmd == "BOARD":
                     self.update_board(rest)
+
                 elif cmd == "TURN":
                     self.current_turn = rest
                     self.status_label.config(text=f"Current turn: {self.current_turn}")
+
                 elif cmd == "INFO":
                     self.append_chat(f"[Info] {rest}")
                     self.info_label.config(text=rest)
+
                 elif cmd == "MSG":
                     self.append_chat(f"[Chat] {rest}")
+
                 elif cmd == "START":
                     tokens = rest.split()
                     if len(tokens) >= 2:
@@ -171,6 +185,7 @@ class TicTacToeGUI:
                         )
                     else:
                         self.append_chat(f"[Game] {rest}")
+
                 elif cmd == "STATS":
                     tokens = rest.split()
                     if len(tokens) == 3:
@@ -178,9 +193,11 @@ class TicTacToeGUI:
                         self.append_chat(
                             f"[Stats] Wins: {wins}, Losses: {losses}, Draws: {draws}"
                         )
+
                 elif cmd == "RESULT":
                     self.append_chat(f"[Result] {rest}")
                     self.status_label.config(text=f"Game result: {rest}")
+
                 elif cmd == "DISCONNECT":
                     messagebox.showinfo("Disconnected", "Disconnected from server.")
                     try:
@@ -189,15 +206,17 @@ class TicTacToeGUI:
                         pass
                     self.root.destroy()
                     return
+
         except Exception as e:
             print(f"[ERROR] process_queue exception: {e}")
 
-        # 再次安排自己 100 ms 后检查队列
+        # Schedule next queue check after 100 ms
         self.root.after(100, self.process_queue)
 
-    # ---------- 从网络读消息的入口（由线程调用） ----------
+    # ---------- Message Handler Called by Network Thread ----------
 
     def handle_server_line(self, line):
+        """Parse a raw server line and push it into the GUI queue."""
         print(f"[DEBUG] handle_server_line raw={line!r}")
         line = line.strip()
         if not line:
@@ -205,12 +224,13 @@ class TicTacToeGUI:
         parts = line.split(" ", 1)
         cmd = parts[0]
         rest = parts[1] if len(parts) > 1 else ""
-        # 把消息丢到队列，主线程再处理
+        # Put into queue for GUI thread to handle
         self.msg_queue.put((cmd, rest))
 
-# ---------- 网络读线程 ----------
+# ---------- Network Reader Thread ----------
 
 def reader_thread(sock, gui: TicTacToeGUI):
+    """Continuously read lines from server and deliver them to the GUI."""
     while True:
         line = recv_line(sock)
         if line is None:
@@ -222,14 +242,16 @@ def reader_thread(sock, gui: TicTacToeGUI):
 
 def main():
     root = tk.Tk()
-    root.withdraw()  # 先隐藏主窗口
+    root.withdraw()  # Hide the main window until login is completed
 
     host = simpledialog.askstring("Server Host", "Enter server host:", initialvalue="127.0.0.1")
     if host is None:
         return
+
     port_str = simpledialog.askstring("Server Port", "Enter server port:", initialvalue="5500")
     if port_str is None:
         return
+
     try:
         port = int(port_str)
     except ValueError:
@@ -241,7 +263,7 @@ def main():
         messagebox.showerror("Error", "Username cannot be empty.")
         return
 
-    # 创建 socket 并连接
+    # Create socket and connect
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
@@ -249,14 +271,16 @@ def main():
         messagebox.showerror("Error", f"Could not connect to server:\n{e}")
         return
 
-    # 连接 OK，创建 GUI
+    # Connection OK → show main window and launch GUI
     root.deiconify()
     gui = TicTacToeGUI(root, sock, username)
 
-    # 发送用户名
+    # Send username to server
     send_line(sock, f"USER {username}")
 
-    # 启动读线程
+    # Start network reader thread
+    t = threading.Thread(target=reader_thread, args=(sock, gui), daemon=True)
+    # Start network reader thread
     t = threading.Thread(target=reader_thread, args=(sock, gui), daemon=True)
     t.start()
 

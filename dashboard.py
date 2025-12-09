@@ -1,4 +1,3 @@
-# dashboard.py
 from flask import Flask, render_template_string
 import json
 import os
@@ -10,6 +9,7 @@ LOG_FILE = "server.log"
 app = Flask(__name__)
 
 def load_stats():
+    # Load player statistics from stats.json if the file exists
     if os.path.exists(STATS_FILE):
         try:
             with open(STATS_FILE, "r", encoding="utf-8") as f:
@@ -19,6 +19,7 @@ def load_stats():
     return {}
 
 def load_logs(max_lines=100):
+    # Load the latest server logs; return up to max_lines
     if not os.path.exists(LOG_FILE):
         return []
     try:
@@ -101,7 +102,7 @@ TEMPLATE = """
 @app.route("/")
 def index():
     raw_stats = load_stats()
-    # 转成对象，模板里好访问
+    # Convert dict values into simple objects so template can access attributes
     stats = {
         name: type("S", (), s) for name, s in raw_stats.items()
     }
@@ -114,5 +115,5 @@ def index():
     )
 
 if __name__ == "__main__":
-    # 默认在 http://127.0.0.1:5000
+    # Default address: http://127.0.0.1:5000
     app.run(debug=True)
