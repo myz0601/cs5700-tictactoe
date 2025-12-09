@@ -8,5 +8,15 @@
     "wins": 0,
     "losses": 2,
     "draws": 0
+  },
+  "alice": {
+    "wins": 1,
+    "losses": 0,
+    "draws": 0
+  },
+  "bob": {
+    "wins": 0,
+    "losses": 1,
+    "draws": 0
   }
 }
