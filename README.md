@@ -27,6 +27,8 @@ The application implements all required features for Project 2:
 5. **Statistics Tracking**: System tracks wins, losses, and draws for each player
 6. **Connection Activity Logging**: Server logs all connection events and game activities
 7. **Command-line Interface**: Intuitive text-based user interface
+8. **Graphical User Interface (GUI)**: Optional Tkinter-based interface with clickable board and chat display
+9. **Web Dashboard**: A Flask-based leaderboard that displays player statistics in real time
 
 ## System Architecture
 
@@ -43,6 +45,13 @@ The application follows a **client-server architecture**:
 │  (Player O) │                         └─────────────┘
 └─────────────┘
 ```
+- **GUI Client (`gui_client.py`)**:
+  - Optional Tkinter-based graphical interface
+  - Provides clickable board, real-time updates, and integrated chat display
+
+- **Web Dashboard (`dashboard.py`)**:
+  - Simple Flask server displaying player statistics from stats.json
+  - Shows wins, losses, and draws in a leaderboard format
 
 ### Components
 
@@ -70,18 +79,24 @@ The application follows a **client-server architecture**:
   - `json` for statistics storage
 - **Logging**: 
   - `logging` module for server activity tracking
+- **GUI**:
+  - Tkinter for graphical game interface and chat display
+- **Web Dashboard**:
+  - Flask (Python micro-framework) for rendering player statistics
 
 ## Prerequisites
 
 - Python 3.6 or higher
 - Network connectivity between server and clients
-- No additional dependencies required (uses Python standard library only)
+- The core game (server + CLI client + GUI client) uses only Python standard libraries.
+- The optional dashboard requires one external dependency: Flask.
 
 ## Installation
 
 1. Clone or download the project repository
 2. Ensure Python 3.6+ is installed on your system
-3. No additional package installation required
+3. Create Virtual Environment (recommended)
+4. Install Flask (optional, required for the dashboard)
 
 ## Usage
 
@@ -98,19 +113,20 @@ Server listening on 0.0.0.0:5500
 
 ### Starting Clients
 
-Open two terminal windows and run the client in each:
+### Starting the GUI Client
+
+The GUI client provides a Tkinter-based interface with a clickable board and integrated chat.
 
 ```bash
-python client.py <server_host> <server_port> <username>
+python gui_client.py <server_host> <server_port> <username>
 ```
+
+Open two terminal windows and run the client in each:
 
 **Example:**
 ```bash
-# Terminal 1
-python client.py localhost 5500 Alice
-
-# Terminal 2
-python client.py localhost 5500 Bob
+python gui_client.py localhost 5500 Alice
+python gui_client.py localhost 5500 Bob
 ```
 
 ### Client Commands
@@ -141,11 +157,14 @@ Once connected, players can use the following commands:
 
 ```
 cs5700-tictactoe/
-├── server.py          # Server implementation with game logic
-├── client.py          # Client implementation with CLI
-├── stats.json         # Player statistics (auto-generated)
-├── server.log         # Server activity logs (auto-generated)
-└── README.md          # This file
+├── server.py # Game server
+├── client.py # CLI client
+├── gui_client.py # Tkinter-based GUI client
+├── dashboard.py # Web dashboard for statistics display
+├── stats.json # Persistent player statistics
+├── server.log # Server activity log
+├── venv/ # Optional virtual environment
+└── README.md
 ```
 
 ## Network Protocol
@@ -228,14 +247,11 @@ The server checks for wins in 8 possible configurations:
 
 Potential enhancements for future versions:
 
-1. **Graphical User Interface**: Web-based or desktop GUI for better user experience
-2. **Concurrent Games**: Support multiple simultaneous game sessions
-3. **Reconnection Support**: Allow players to reconnect after disconnection
-4. **Dashboard**: Web-based dashboard for viewing statistics and connection activity
-5. **Spectator Mode**: Allow observers to watch ongoing games
-6. **Enhanced Protocol**: JSON-based protocol for better extensibility
-7. **Authentication**: User authentication and session management
-8. **Tournament Mode**: Support for multi-player tournaments
+1. Support for multiple concurrent games (server currently supports one game at a time)
+2. Improved GUI responsiveness and smoother animations
+3. Automatic reconnection or game recovery after a player disconnects
+4. Authentication system and persistent player accounts
+5. Multi-game tournament mode
 
 ## Authors
 
