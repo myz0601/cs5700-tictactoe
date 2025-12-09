@@ -12,3 +12,7 @@
 2025-12-08 19:46:46,709 [INFO] Player 1 connected from ('127.0.0.1', 62873)
 2025-12-08 19:47:12,619 [INFO] Player 2 connected from ('127.0.0.1', 62879)
 2025-12-08 19:47:12,628 [INFO] Starting game between alice and bob
+2025-12-08 21:09:06,914 [INFO] Server starting on 0.0.0.0:5500
+2025-12-08 21:09:15,384 [INFO] Player 1 connected from ('127.0.0.1', 63620)
+2025-12-08 21:09:24,063 [INFO] Player 2 connected from ('127.0.0.1', 63624)
+2025-12-08 21:09:24,208 [INFO] Starting game between alice and bob

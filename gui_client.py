@@ -241,50 +241,37 @@ def reader_thread(sock, gui: TicTacToeGUI):
 # ---------- main ----------
 
 def main():
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window until login is completed
+    import sys
 
-    host = simpledialog.askstring("Server Host", "Enter server host:", initialvalue="127.0.0.1")
-    if host is None:
+    if len(sys.argv) != 4:
+        print("Usage: python gui_client.py <server_host> <server_port> <username>")
         return
 
-    port_str = simpledialog.askstring("Server Port", "Enter server port:", initialvalue="5500")
-    if port_str is None:
-        return
-
+    host = sys.argv[1]
     try:
-        port = int(port_str)
+        port = int(sys.argv[2])
     except ValueError:
-        messagebox.showerror("Error", "Port must be an integer.")
+        print("Port must be an integer.")
         return
+    username = sys.argv[3]
 
-    username = simpledialog.askstring("Username", "Enter your username:")
-    if not username:
-        messagebox.showerror("Error", "Username cannot be empty.")
-        return
-
-    # Create socket and connect
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
     except OSError as e:
-        messagebox.showerror("Error", f"Could not connect to server:\n{e}")
+        print(f"Could not connect to server: {e}")
         return
 
-    # Connection OK → show main window and launch GUI
-    root.deiconify()
+    root = tk.Tk()
     gui = TicTacToeGUI(root, sock, username)
 
-    # Send username to server
     send_line(sock, f"USER {username}")
 
-    # Start network reader thread
-    t = threading.Thread(target=reader_thread, args=(sock, gui), daemon=True)
-    # Start network reader thread
     t = threading.Thread(target=reader_thread, args=(sock, gui), daemon=True)
     t.start()
 
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

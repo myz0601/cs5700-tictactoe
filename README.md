@@ -35,15 +35,46 @@ The application implements all required features for Project 2:
 The application follows a **client-server architecture**:
 
 ```
-┌─────────────┐         TCP/IP          ┌─────────────┐
-│   Client 1  │◄───────────────────────►│             │
-│  (Player X) │                         │   Server    │
-└─────────────┘                         │  (Game      │
-                                        │   Logic)    │
-┌─────────────┐         TCP/IP          │             │
-│   Client 2  │◄───────────────────────►│             │
-│  (Player O) │                         └─────────────┘
-└─────────────┘
+                     ┌──────────────────────────┐
+                     │        Dashboard         │
+                     │      (Flask Server)      │
+                     │   Reads stats.json file  │
+                     └──────────────▲───────────┘
+                                    │
+                                    │
+                        Reads player statistics
+                                    │
+                     ┌──────────────┴──────────────┐
+                     │         stats.json          │ 
+                     └──────────────▲──────────────┘
+                                    │
+                                    │ persists wins/losses/draws
+                                    │
+                     ┌──────────────┴───────────────┐
+                     │            Server            │
+                     │          (server.py)         │
+                     │  - Accepts connections       │
+                     │  - USER registration         │
+                     │  - Player matching           │
+                     │  - Turn-based game logic     │
+                     │  - Win/draw detection        │
+                     │  - Broadcasts board updates  │
+                     │  - Chat message relay        │
+                     │  - Logging (server.log)      │
+                     │  - I/O multiplexing (select) │
+                     └───────▲──────────────▲───────┘
+                             │              │
+                     TCP/IP  │              │  TCP/IP
+                             │              │
+                 ┌───────────┴────┐      ┌──┴────────────┐
+                 │   CLI Client   │      │   GUI Client  │
+                 │   (client.py)  │      │(gui_client.py)│
+                 │ - Text input   │      │ - Tkinter UI  │
+                 │ - Reader thread│      │ - Buttons     │
+                 │ - Board ASCII  │      │ - Chat window │
+                 │ - MOVE/CHAT    │      │ - Thread-safe │
+                 └────────────────┘      └───────────────┘
+
 ```
 - **GUI Client (`gui_client.py`)**:
   - Optional Tkinter-based graphical interface
